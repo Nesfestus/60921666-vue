@@ -1,69 +1,105 @@
+
+
 <template>
-  <header>
-    <nav>
+  <Menubar :model="items">
+    <template #item="{ item, props }">
+      <router-link
+        v-if="item.route"
+        v-slot="{ href, navigate }"
+        :to="item.route"
+        custom
+      >
+        <a
+          :href="href"
+          v-bind="props.action"
+          @click="navigate"
+          class="flex items-center gap-2 px-4 py-2"
+        >
+          <span :class="item.icon" />
+          <span>{{ item.label }}</span>
+        </a>
+      </router-link>
+    </template>
 
-      <ul>
-        <li>
-          <router-link to="/">Главная</router-link>
-        </li>
-        <li>
-          <router-link to="/categories">Категории</router-link>
-        </li>
-        <li>
-          <router-link to="/items">Товары</router-link>
-        </li>
-      </ul>
-
-      <div v-if="isAuthenticated && user">
-        Welcome, {{ user.name }}
-        <button @click="logout">Logout</button>
+    <template #end>
+      <div
+        v-if="isAuthenticated && user"
+        class="flex items-center gap-3"
+      >
+        <span class="pi pi-user"></span>
+        {{ user.name }}
+        <PrimeButton label="Выйти" @click="logout" />
       </div>
 
-      <div v-else>
-        <form @submit.prevent="login">
-          <div>
-            <label for="email">Email:</label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              required
-            />
-          </div>
+      <form
+        v-else
+        @submit.prevent="login"
+        class="flex items-center gap-2"
+      >
+        <InputText
+          id="email"
+          v-model="email"
+          type="email"
+          required
+          placeholder="Логин"
+        />
 
-          <div>
-            <label for="password">Password:</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              required
-            />
-          </div>
+        <InputText
+          id="password"
+          v-model="password"
+          type="password"
+          required
+          placeholder="Пароль"
+        />
 
-          <button type="submit">Login</button>
+        <PrimeButton type="submit" label="Войти" />
 
-          <p v-if="authError" class="error">
-            {{ authError }}
-          </p>
-        </form>
-      </div>
-    </nav>
-  </header>
+        <div v-if="authError" class="error">
+          {{ authError }}
+        </div>
+      </form>
+    </template>
+  </Menubar>
 
-  <router-view></router-view>
-
+  <router-view />
 </template>
 
 <script>
-import {useAuthStore} from '@/stores/authStore'
+import { useAuthStore } from '@/stores/authStore'
+import PrimeButton from 'primevue/button'
+import Menubar from 'primevue/menubar'
+import InputText from 'primevue/inputtext'
 
 export default {
+  components: {
+    PrimeButton,
+    Menubar,
+    InputText,
+  },
+
   data() {
     return {
       email: '',
       password: '',
       authStore: useAuthStore(),
+
+      items: [
+        {
+          label: 'Главная страница',
+          icon: 'pi pi-home',
+          route: '/',
+        },
+        {
+          label: 'Категории',
+          icon: 'pi pi-folder',
+          route: '/categories',
+        },
+        {
+          label: 'Товары',
+          icon: 'pi pi-box',
+          route: '/items',
+        },
+      ],
     }
   },
 
