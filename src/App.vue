@@ -1,6 +1,7 @@
 
 
 <template>
+  <Toast position="top-right" />
   <Menubar :model="items">
     <template #item="{ item, props }">
       <router-link
@@ -69,12 +70,14 @@ import { useAuthStore } from '@/stores/authStore'
 import PrimeButton from 'primevue/button'
 import Menubar from 'primevue/menubar'
 import InputText from 'primevue/inputtext'
+import Toast from 'primevue/toast'
 
 export default {
   components: {
     PrimeButton,
     Menubar,
     InputText,
+    Toast,
   },
 
   data() {

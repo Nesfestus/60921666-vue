@@ -16,6 +16,32 @@ export const useDataStore = defineStore('data', {
   }),
 
   actions: {
+
+    async create_movie(movie) {
+      const authStore = useAuthStore()
+      const formData = new FormData()
+
+      formData.append('name', movie.name ?? '')
+      formData.append('duration', movie.duration ?? '')
+
+      if (movie.picture) {
+        formData.append('picture', movie.picture)
+      }
+
+      const response = await axios.post(
+        `${backendUrl}/api/movie`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+            Accept: 'application/json',
+          },
+        },
+      )
+
+      return response.data
+    },
+
     async get_movies(page = 0, perpage = 5) {
       this.loading = true
       this.errorMessage = ''

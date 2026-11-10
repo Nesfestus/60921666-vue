@@ -1,8 +1,9 @@
-
 <script>
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import PrimeButton from 'primevue/button'
 import { useDataStore } from '../stores/dataStore'
+import { useAuthStore } from '../stores/authStore'
 
 export default {
   name: 'ItemsPage',
@@ -10,11 +11,13 @@ export default {
   components: {
     DataTable,
     Column,
+    PrimeButton,
   },
 
   data() {
     return {
       dataStore: useDataStore(),
+      authStore: useAuthStore(),
       perpage: 5,
       offset: 0,
     }
@@ -27,6 +30,10 @@ export default {
 
     moviesTotal() {
       return this.dataStore.movies_total
+    },
+
+    canCreateMovie() {
+      return Number(this.authStore.user?.is_admin) === 1
     },
   },
 
@@ -52,7 +59,16 @@ export default {
 
 <template>
   <main>
-    <h1>Список фильмов</h1>
+    <div class="page-header">
+      <h1>Список фильмов</h1>
+
+      <PrimeButton
+        v-if="canCreateMovie"
+        label="Добавить фильм"
+        icon="pi pi-plus"
+        @click="$router.push('/items/create')"
+      />
+    </div>
 
     <p v-if="dataStore.errorMessage">
       {{ dataStore.errorMessage }}
@@ -71,7 +87,40 @@ export default {
     >
       <Column field="id" header="№" />
       <Column field="name" header="Название фильма" />
+
+      <Column header="Постер">
+        <template #body="{ data }">
+          <img
+            v-if="data.picture_url"
+            :src="data.picture_url"
+            :alt="`Постер фильма ${data.name}`"
+            class="movie-poster"
+            loading="lazy"
+          />
+          <span v-else>Нет постера</span>
+        </template>
+      </Column>
+
       <Column field="duration" header="Продолжительность" />
     </DataTable>
   </main>
 </template>
+
+<style scoped>
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.movie-poster {
+  display: block;
+  width: 72px;
+  height: 108px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+</style>
