@@ -93,13 +93,13 @@ export default {
           route: '/',
         },
         {
-          label: 'Категории',
-          icon: 'pi pi-folder',
+          label: 'Залы',
+          icon: 'pi pi-building',
           route: '/categories',
         },
         {
-          label: 'Товары',
-          icon: 'pi pi-box',
+          label: 'Фильмы',
+          icon: 'pi pi-video',
           route: '/items',
         },
       ],

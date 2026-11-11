@@ -2,6 +2,7 @@
 import PrimeButton from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import { useDataStore } from '@/stores/dataStore'
+import FileUpload from 'primevue/fileupload'
 
 export default {
   name: 'CreateMoviePage',
@@ -9,6 +10,7 @@ export default {
   components: {
     PrimeButton,
     InputText,
+    FileUpload,
   },
 
   data() {
@@ -25,7 +27,7 @@ export default {
 
   methods: {
     onPictureChange(event) {
-      this.movie.picture = event.target.files[0] ?? null
+      this.movie.picture = event.files[0] ?? null
     },
 
     async submitMovie() {
@@ -44,7 +46,7 @@ export default {
         })
 
         this.movie = { name: '', duration: '', picture: null }
-        this.$refs.pictureInput.value = ''
+        this.$refs.pictureInput.clear()
       } catch (error) {
         const response = error.response
         let detail = response?.data?.message || 'Не удалось связаться с сервером.'
@@ -87,15 +89,37 @@ export default {
         :disabled="submitting"
       />
 
-      <label for="movie-picture">Постер фильма</label>
-      <input
-        id="movie-picture"
+      <span id="movie-picture-label">Постер фильма</span>
+
+      <FileUpload
         ref="pictureInput"
-        type="file"
+        mode="basic"
+        name="picture"
         accept="image/jpeg,image/png,image/webp"
+        :multiple="false"
+        :auto="false"
+        customUpload
         :disabled="submitting"
-        @change="onPictureChange"
-      />
+        :chooseLabel="movie.picture?.name || 'Выберите файл'"
+        chooseIcon="pi pi-file"
+        :chooseButtonProps="{
+    severity: 'secondary',
+    outlined: true,
+    'aria-labelledby': 'movie-picture-label',
+    style: {
+      width: '100%',
+      justifyContent: 'flex-start',
+      minWidth: '0',
+    },
+  }"
+        class="poster-upload"
+        @select="onPictureChange"
+        @clear="movie.picture = null"
+      >
+        <template #filelabel>
+          <span></span>
+        </template>
+      </FileUpload>
       <small>JPG, PNG или WEBP, размер до 2 МБ</small>
 
       <div class="form-actions">
@@ -132,4 +156,22 @@ export default {
   gap: 12px;
   margin-top: 12px;
 }
+
+.poster-upload {
+  width: 100%;
+}
+
+.poster-upload :deep(.p-fileupload-basic-content) {
+  width: 100%;
+}
+
+.poster-upload :deep(.p-button-label) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
 </style>
