@@ -42,15 +42,73 @@ export const useDataStore = defineStore('data', {
       return response.data
     },
 
-    async get_movies(page = 0, perpage = 5) {
+    async delete_movie(id) {
+      const authStore = useAuthStore()
+
+      const response = await axios.delete(
+        `${backendUrl}/api/movie/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+            Accept: 'application/json',
+          },
+        },
+      )
+
+      return response.data
+    },
+
+    async get_movie(id) {
+      const authStore = useAuthStore()
+
+      const response = await axios.get(
+        `${backendUrl}/api/movie/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+            Accept: 'application/json',
+          },
+        },
+      )
+
+      return response.data
+    },
+
+    async update_movie(id, movie) {
+      const authStore = useAuthStore()
+      const formData = new FormData()
+
+      formData.append('name', movie.name ?? '')
+      formData.append('duration', movie.duration ?? '')
+
+      if (movie.picture) {
+        formData.append('picture', movie.picture)
+      }
+
+      const response = await axios.post(
+        `${backendUrl}/api/movie/${id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${authStore.token}`,
+            Accept: 'application/json',
+          },
+        },
+      )
+
+      return response.data
+    },
+
+    async get_movies(page = 0, perpage = 5, search = '') {
       this.loading = true
       this.errorMessage = ''
+
 
       try {
         const authStore = useAuthStore()
 
         const response = await axios.get(`${backendUrl}/api/movie`, {
-          params: { page, perpage },
+          params: { page, perpage, search },
           headers: {
             Authorization: `Bearer ${authStore.token}`,
             Accept: 'application/json',
@@ -66,11 +124,12 @@ export const useDataStore = defineStore('data', {
       }
     },
 
-    async get_movies_total() {
+    async get_movies_total(search = '') {
       try {
         const authStore = useAuthStore()
 
         const response = await axios.get(`${backendUrl}/api/movies_total`, {
+          params: { search },
           headers: {
             Authorization: `Bearer ${authStore.token}`,
             Accept: 'application/json',
