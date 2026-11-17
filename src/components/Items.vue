@@ -44,7 +44,7 @@ export default {
       return this.dataStore.movies_total
     },
 
-    canCreateMovie() {
+    canManageMovies() {
       return Number(this.authStore.user?.is_admin) === 1
     },
   },
@@ -166,7 +166,7 @@ export default {
       </div>
 
       <PrimeButton
-        v-if="canCreateMovie"
+        v-if="canManageMovies"
         label="Добавить фильм"
         icon="pi pi-plus"
         @click="$router.push('/items/create')"
@@ -284,7 +284,7 @@ export default {
           </template>
         </Column>
 
-        <Column header="Действия" class="actions-column">
+        <Column v-if="canManageMovies" header="Действия" class="actions-column">
           <template #body="{ data }">
             <div class="table-row-actions">
               <PrimeButton

@@ -105,12 +105,9 @@ export const useDataStore = defineStore('data', {
 
 
       try {
-        const authStore = useAuthStore()
-
         const response = await axios.get(`${backendUrl}/api/movie`, {
           params: { page, perpage, search },
           headers: {
-            Authorization: `Bearer ${authStore.token}`,
             Accept: 'application/json',
           },
         })
@@ -126,12 +123,9 @@ export const useDataStore = defineStore('data', {
 
     async get_movies_total(search = '') {
       try {
-        const authStore = useAuthStore()
-
         const response = await axios.get(`${backendUrl}/api/movies_total`, {
           params: { search },
           headers: {
-            Authorization: `Bearer ${authStore.token}`,
             Accept: 'application/json',
           },
         })
