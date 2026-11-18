@@ -1,0 +1,52 @@
+name: cinema-lb12
+
+services:
+  cinema-db:
+    image: mysql:8.0
+    restart: unless-stopped
+    mem_limit: 768m
+    env_file:
+      - path: /root/cinema-docker-secrets/mysql.env
+        format: raw
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    volumes:
+      - cinema-mysql-data:/var/lib/mysql
+    networks: [cinema-network]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  cinema-backend-fpm:
+    build: ./backend
+    image: cinema-backend:php8.4-fpm
+    restart: unless-stopped
+    depends_on:
+      cinema-db:
+        condition: service_healthy
+    volumes:
+      - /root/cinema-docker-secrets/laravel-lb12.env:/var/www/html/.env:ro
+    networks: [cinema-network]
+
+  cinema-nginx:
+    image: nginx:stable
+    restart: unless-stopped
+    depends_on: [cinema-backend-fpm]
+    ports:
+      - "${CINEMA_HTTP_BIND:-80}:80"
+      - "${CINEMA_HTTPS_BIND:-443}:443"
+    volumes:
+      - /var/www/cinema-docker/frontend:/usr/share/nginx/html:ro
+      - ./frontend-fastcgi.conf:/etc/nginx/conf.d/default.conf:ro
+      - /var/www/cinema-docker/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/cinema-docker/acme-webroot:/var/www/certbot:ro
+    networks: [cinema-network]
+
+networks:
+  cinema-network:
+    external: true
+
+volumes:
+  cinema-mysql-data:
+    external: true
