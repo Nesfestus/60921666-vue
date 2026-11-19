@@ -1,0 +1,57 @@
+name: Deploy Vue
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Build Vue
+        env:
+          VITE_APP_BACKEND_URL: ${{ vars.VITE_APP_BACKEND_URL }}
+        run: |
+          test -n "$VITE_APP_BACKEND_URL"
+          npm ci
+          npm run build
+          test -s dist/index.html
+
+      - name: Prepare SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST_PUBLIC_KEY: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOKvYihzdwhAyuiy6cizDEP99C2QbCZSqsATdEZVRew/'
+        run: |
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          printf '%s %s\n' "$SSH_HOST" "$SSH_HOST_PUBLIC_KEY" > "$HOME/.ssh/known_hosts"
+
+      - name: Publish Vue and check site
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -az --itemize-changes --delay-updates --delete-delay \
+            -e 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes' \
+            dist/ "$SSH_USER@$SSH_HOST:/var/www/cinema-docker/frontend/"
+
+          ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" \
+            'curl -fsS --max-time 10 --resolve cinemavoid.space:443:127.0.0.1 -o /dev/null -w "Vue HTTP %{http_code}\n" https://cinemavoid.space/'
